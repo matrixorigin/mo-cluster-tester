@@ -2,7 +2,7 @@ name: MatrixOne Integration Testing
 
 on:
   schedule:
-    - cron: '30 13 * * *'
+    - cron: '0 */4 * * *'
   workflow_dispatch:
     inputs:
       round:
@@ -34,8 +34,13 @@ jobs:
           cd $GITHUB_WORKSPACE
           chmod a+x run_cluster_test.sh
           ./run_cluster_test.sh -c ${{ github.event.inputs.round }} -t ${{ github.event.inputs.timeout }} 2>&1 | tee -a tester.log
+                            
+      - name: Check MO-Service Status
+        if: ${{ always() }}
+        run: |
+          cd $GITHUB_WORKSPACE
           if [ "$(cat tester.log |grep failed | grep -v "grep" | wc -l)" -gt 0 ]; then echo 'few tests have failed'; exit 1; else echo 'All tests passed'; fi
-                  
+      
       - uses: actions/upload-artifact@v2
         if: ${{ always() }}
         continue-on-error: true
@@ -44,6 +49,7 @@ jobs:
           path: |
             ${{ github.workspace }}/workspace/log
           retention-days: 7
+          
       - name: notice failure
         if: ${{ failure() }}
         uses: chf007/action-wechat-work@master
@@ -73,9 +79,14 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE
           chmod a+x run_cluster_test.sh
-          ./run_cluster_test.sh -c 100 -t 5m 2>&1 | tee -a tester.log
+          ./run_cluster_test.sh -c 60 -t 5m 2>&1 | tee -a tester.log
+          
+      - name: Check MO-Service Status
+        if: ${{ always() }}
+        run: |
+          cd $GITHUB_WORKSPACE
           if [ "$(cat tester.log |grep failed | grep -v "grep" | wc -l)" -gt 0 ]; then echo 'few tests have failed'; exit 1; else echo 'All tests passed'; fi
-                  
+
       - uses: actions/upload-artifact@v2
         if: ${{ always() }}
         continue-on-error: true
@@ -84,6 +95,7 @@ jobs:
           path: |
             ${{ github.workspace }}/workspace/log
           retention-days: 7
+          
       - name: notice failure
         if: ${{ failure() }}
         uses: chf007/action-wechat-work@master
