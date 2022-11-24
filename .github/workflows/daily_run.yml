@@ -83,6 +83,7 @@ jobs:
           
       - name: Check MO-Service Status
         if: ${{ always() }}
+        continue-on-error: true
         run: |
           cd $GITHUB_WORKSPACE
           if [ "$(cat tester.log |grep failed | grep -v "grep" | wc -l)" -gt 0 ]; then echo 'few tests have failed'; exit 1; else echo 'All tests passed'; fi
